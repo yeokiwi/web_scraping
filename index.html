@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSO Law Fetcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="DSO Relevant Legislation - Search and browse relevant laws and regulations">
+    <meta name="theme-color" content="#1a365d">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzFhMzY1ZCIvPgo8cGF0aCBkPSJNOCAxMGgxNnYySDh2LTJ6bTAgNGgxNnYySDh2LTJ6bTAgNGgxMnYySDh2LTJ6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="header-content">
+                <div class="title-section">
+                    <h1>
+                        <span class="title-icon">⚖️</span>
+                        DSO Relevant Legislation
+                        <span class="title-subtitle">Legal Intelligence Dashboard</span>
+                    </h1>
+                </div>
+                
+                <div class="controls">
+                    <div class="search-group">
+                        <div class="search-container">
+                            <input type="text" id="search" placeholder="Search laws and regulations..." aria-label="Search laws">
+                            <div class="search-icon">🔍</div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="websiteSelect" aria-label="Filter by website">
+                            <option value="all">All Websites</option>
+                            <!-- Website options will be populated dynamically -->
+                        </select>
+                        
+                        <select id="dateFilter" aria-label="Filter by date">
+                            <option value="all">All Dates</option>
+                            <option value="week">Last Week</option>
+                            <option value="month">Last Month</option>
+                            <option value="date_desc">Date (Newest First)</option>
+                            <option value="date_asc">Date (Oldest First)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="action-group">
+                        <button id="refresh" aria-label="Refresh data" title="Refresh Data">
+                            <span class="button-icon">🔄</span>
+                            <span class="button-text">Refresh Data</span>
+                        </button>
+                        
+                        <button id="scrapeAll" aria-label="Scrape all websites" title="Scrape All Websites">
+                            <span class="button-icon">📡</span>
+                            <span class="button-text">Scrape All</span>
+                        </button>
+                        
+                        <button id="editKeywords" aria-label="Edit keywords" title="Edit Keywords">
+                            <span class="button-icon">✏️</span>
+                            <span class="button-text">Edit Keywords</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Modal -->
+            <div id="keywordModal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+                <div class="modal-overlay" onclick="closeModal()"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modal-title">
+                            <span class="modal-icon">🏷️</span>
+                            Edit Keywords
+                        </h3>
+                        <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <label for="keywordsTextarea" class="textarea-label">
+                            Keywords (one per line):
+                        </label>
+                        <textarea id="keywordsTextarea" 
+                                  placeholder="Enter keywords, one per line...&#10;Example:&#10;data protection&#10;privacy regulation&#10;cybersecurity"
+                                  aria-describedby="keywords-help"></textarea>
+                        <div id="keywords-help" class="help-text">
+                            Enter relevant keywords to improve law matching accuracy
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button id="cancelEdit" type="button">
+                            <span class="button-icon">❌</span>
+                            Cancel
+                        </button>
+                        <button id="saveKeywords" type="button">
+                            <span class="button-icon">💾</span>
+                            Save Keywords
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="content-wrapper">
+                <div id="loading" class="loading-container" aria-live="polite">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading laws...</div>
+                    <div class="loading-subtitle">Analyzing relevant legislation</div>
+                </div>
+                
+                <div id="laws-container" class="laws-grid" role="main" aria-live="polite" aria-label="Laws and regulations">
+                    <!-- Law cards will be populated dynamically -->
+                </div>
+                
+                <div id="no-results" class="no-results" style="display: none;">
+                    <div class="no-results-icon">📋</div>
+                    <h3>No laws found</h3>
+                    <p>Try adjusting your search criteria or filters</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>DSO Law Fetcher</h4>
+                    <p>Intelligent legal document discovery and analysis</p>
+                </div>
+                <div class="footer-section">
+                    <div class="footer-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Last Updated:</span>
+                            <span id="last-updated" class="stat-value">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Laws:</span>
+                            <span id="total-laws" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Enhanced loading overlay for better UX -->
+    <div id="global-loading" class="global-loading" style="display: none;">
+        <div class="global-loading-content">
+            <div class="loading-spinner large"></div>
+            <div class="loading-message">Processing...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    
+    <!-- Additional functionality script -->
+    <script>
+        // Enhanced modal functionality
+        function closeModal() {
+            const modal = document.getElementById('keywordModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Keyboard accessibility
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Enhanced search functionality
+        const searchInput = document.getElementById('search');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                // Trigger search with debouncing
+                if (typeof filterLaws === 'function') {
+                    filterLaws();
+                }
+            }, 300);
+        });
+
+        // Update stats function (to be called from main app)
+        window.updateStats = function(lawCount) {
+            document.getElementById('total-laws').textContent = lawCount || '0';
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        };
+
+        // Global loading state
+        window.showGlobalLoading = function(message = 'Processing...') {
+            const overlay = document.getElementById('global-loading');
+            const messageEl = overlay.querySelector('.loading-message');
+            messageEl.textContent = message;
+            overlay.style.display = 'flex';
+        };
+
+        window.hideGlobalLoading = function() {
+            document.getElementById('global-loading').style.display = 'none';
+        };
+
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e);
+            hideGlobalLoading();
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add any initialization code here
+            console.log('DSO Law Fetcher initialized');
+        });
+    </script>
+</body>
+</html>
